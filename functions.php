@@ -95,6 +95,17 @@ function argon_widgets_init() {
 			'after_title'   => '</h6>',
 		)
 	);
+	register_sidebar(
+		array(
+			'name'          => '右侧栏小工具',
+			'id'            => 'rightbar-tools',
+			'description'   => __( '右侧栏小工具 (在 "Argon 主题选项" 中选择 "三栏布局" 才会显示)' ),
+			'before_widget' => '<div id="%1$s" class="widget %2$s card shadow-sm bg-white border-0">',
+			'after_widget'  => '</div>',
+			'before_title'  => '<h6 class="font-weight-bold text-black">',
+			'after_title'   => '</h6>',
+		)
+	);
 }
 add_action('widgets_init','argon_widgets_init');
 //注册新后台主题配色方案
@@ -206,13 +217,46 @@ function get_seo_description(){
 		}
 		if (!post_password_required()){
 			return  
-			htmlspecialchars(mb_substr(str_replace("\n", '', strip_tags(get_post($post -> ID) -> post_content)), 0, 50)) . "...";
+			htmlspecialchars(mb_substr(str_replace("\n", '', strip_tags($post -> post_content)), 0, 50)) . "...";
 		}else{
 			return "这是一个加密页面，需要密码来查看";
 		}
 	}else{
 		return get_option('argon_seo_description');
 	}
+}
+//页面 Keywords
+function get_seo_keywords(){
+	if (is_single()){
+		global $post;
+		$tags = get_the_tags('', ',', '', $post -> ID);
+		if ($tags != null){
+			$res = "";
+			foreach ($tags as $tag){
+				if ($res != ""){
+					$res .= ",";
+				}
+				$res .= $tag -> name;
+			}
+			return $res;
+		}
+	}
+	if (is_category()){
+		return single_cat_title('', false);
+	}
+	if (is_tag()){
+		return single_tag_title('', false);
+	}
+	if (is_author()){
+		return get_the_author();
+	}
+	if (is_post_type_archive()){
+		return post_type_archive_title('', false);
+	}
+	if (is_tax()){
+		return single_term_title('', false);
+	}
+	return get_option('argon_seo_keywords');
 }
 //页面浏览量
 function get_post_views($post_id){
@@ -290,7 +334,7 @@ function have_catalog(){
 		return false;
 	}
 	$content = get_post(get_the_ID()) -> post_content;
-	if (preg_match('/<h[1-6]>/',$content)){
+	if (preg_match('/<h[1-6](.*?)>/',$content)){
 		return true;
 	}else{
 		return false;
@@ -522,7 +566,7 @@ function argon_comment_format($comment, $args, $depth){
 					</div>
 				<?php } ?>
 				<div class="comment-time">
-					<?php echo human_time_diff(get_comment_time('U') , current_time('timestamp')) . "前";?>
+					<span class="human-time" data-time="<?php echo get_comment_time('U', true);?>"><?php echo human_time_diff(get_comment_time('U') , current_time('timestamp')) . "前";?></span>
 					<div class="comment-time-details"><?php echo get_comment_time('Y-n-d G:i:s');?></div>
 				</div>
 			</div>
@@ -1473,6 +1517,18 @@ function argon_home_add_post_type_shuoshuo($query){
 if (get_option("argon_home_show_shuoshuo") == "true"){
 	add_action('pre_get_posts', 'argon_home_add_post_type_shuoshuo');
 }
+//首页隐藏特定分类文章
+function argon_home_hide_categories($query){
+	if (is_home() && $query -> is_main_query()){
+		$excludeCategories = explode(",", get_option("argon_hide_categories"));
+		$excludeCategories = array_map(create_function('$cat', 'return "-$cat";'), $excludeCategories);
+		$query -> set('cat', $excludeCategories);
+	}
+	return $query;
+}
+if (get_option("argon_hide_categories") != ""){
+	add_action('pre_get_posts', 'argon_home_hide_categories');
+}
 //文章过时信息显示
 function argon_get_post_outdated_info(){
 	if (get_option("argon_outdated_info_tip_type") == "toast"){
@@ -2131,7 +2187,7 @@ function themeoptions_page(){
 									<div class="themecolor-preview-box"><div class="themecolor-preview" style="background:#212121;" color="#212121"></div><div class="themecolor-name">黑</div></div>
 									<div class="themecolor-preview-box"><div class="themecolor-preview" style="background:#795547;" color="#795547"></div><div class="themecolor-name">棕</div></div>
 								</div>
-								</br>主题色与 <strong onclick="$('#headindex_box a[href=\'#header-id-5\']').click()" style="text-decoration: underline;cursor: pointer;">Banner 渐变背景样式</strong> 选项搭配使用效果更佳
+								</br>主题色与 "Banner 渐变背景样式" 选项搭配使用效果更佳
 								<script>
 									$("input[name='argon_theme_color']").on("change" , function(){
 										$("input[name='argon_theme_color_hex_preview']").val($("input[name='argon_theme_color']").val());
@@ -2233,7 +2289,13 @@ function themeoptions_page(){
 								</div>
 								<label><input name="argon_page_layout" type="radio" value="single" <?php if ($argon_page_layout=='single'){echo 'checked';} ?>> 单栏</label>
 							</div>
-							<p class="description" style="margin-top: 15px;">使用单栏时，关于侧栏的设置将失效。</p>
+							<div class="radio-with-img">
+								<div class="radio-img">
+									<svg width="250" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1920 1080"><rect width="1920" height="1080" style="fill:#e6e6e6"/><g style="opacity:0.5"><rect width="1920" height="381" style="fill:#5e72e4"/></g><rect x="237.5" y="256" width="258" height="179" style="fill:#5e72e4"/><rect x="237.5" y="470" width="258" height="485" style="fill:#fff"/><rect x="538.5" y="256.5" width="842" height="250" style="fill:#fff"/><rect x="538.5" y="536.5" width="842" height="250" style="fill:#fff"/><rect x="538.5" y="817" width="842" height="250" style="fill:#fff"/><rect x="1424" y="256" width="258" height="811" style="fill:#fff"/></svg>
+								</div>
+								<label><input name="argon_page_layout" type="radio" value="triple" <?php if ($argon_page_layout=='triple'){echo 'checked';} ?>> 三栏</label>
+							</div>
+							<p class="description" style="margin-top: 15px;">使用单栏时，关于左侧栏的设置将失效。</br>使用三栏时，请前往 "外观-小工具" 设置页面配置右侧栏内容。</p>
 						</td>
 					</tr>
 					<tr><th class="subtitle"><h3>字体</h3></th></tr>
@@ -2501,7 +2563,16 @@ function themeoptions_page(){
 						</td>
 					</tr>
 					<tr><th class="subtitle"><h2>文章</h2></th></tr>
-					<tr><th class="subtitle"><h3>文章 Meta 信息</h3></th></tr>
+					<tr><th class="subtitle"><h3>文章 Meta 信息</h3></th></tr><tr>
+					<th><label>显示作者</label></th>
+						<td>
+							<select name="argon_show_author">
+								<?php $argon_show_author = get_option('argon_show_author'); ?>
+								<option value="false" <?php if ($argon_show_author=='false'){echo 'selected';} ?>>不显示</option>
+								<option value="true" <?php if ($argon_show_author=='true'){echo 'selected';} ?>>显示</option>
+							</select>
+						</td>
+					</tr>
 					<tr>
 						<th><label>显示字数和预计阅读时间</label></th>
 						<td>
@@ -2985,7 +3056,7 @@ window.pjaxLoaded = function(){
 							<p class="description">设置是否在评论区显示评论者 UA 及显示哪些部分</p>
 						</td>
 					</tr>
-					<tr><th class="subtitle"><h2>其他</h2></th></tr>
+					<tr><th class="subtitle"><h2>杂项</h2></th></tr>
 					<tr>
 						<th><label>是否启用 Pjax</label></th>
 						<td>
@@ -2995,6 +3066,45 @@ window.pjaxLoaded = function(){
 								<option value="true" <?php if ($argon_pjax_disabled=='true'){echo 'selected';} ?>>不启用</option>
 							</select>
 							<p class="description">Pjax 可以增强页面的跳转体验</p>
+						</td>
+					</tr>
+					<tr>
+						<th><label>首页隐藏特定 分类/Tag 下的文章</label></th>
+						<td>
+							<input type="text" class="regular-text" name="argon_hide_categories" value="<?php echo get_option('argon_hide_categories'); ?>"/>
+							<p class="description">输入要隐藏的 分类/Tag 的 ID，用英文逗号分隔，留空则不隐藏</br><a onclick="$('#id_of_categories_and_tags').slideDown(500);" style="cursor: pointer;">点此查看</a>所有分类和 Tag 的 ID
+								<?php
+									echo "<div id='id_of_categories_and_tags' style='display: none;'><div style='font-size: 22px;margin-bottom: 10px;margin-top: 10px;'>分类</div>";
+									$categories = get_categories(array(
+										'hide_empty' => 0,
+										'hierarchical' => 0,
+										'taxonomy' => 'category'
+									));
+									foreach($categories as $category) {
+										echo "<span>".$category -> name ." -> ". $category -> term_id ."</span>";
+									}
+									echo "<div style='font-size: 22px;margin-bottom: 10px;'>Tag</div>";
+									$categories = get_categories(array(
+										'hide_empty' => 0,
+										'hierarchical' => 0,
+										'taxonomy' => 'post_tag'
+									));
+									foreach($categories as $category) {
+										echo "<span>".$category -> name ." -> ". $category -> term_id ."</span>";
+									}
+									echo "</div>";
+								?>
+								<style>
+									#id_of_categories_and_tags > span {
+										display: inline-block;
+										background: rgba(0, 0, 0, .08);
+										border-radius: 2px;
+										margin-right: 5px;
+										margin-bottom: 8px;
+										padding: 5px 10px;
+									}
+								</style>
+							</p>
 						</td>
 					</tr>
 					<tr>
@@ -3429,6 +3539,8 @@ function argon_update_themeoptions(){
 		argon_update_option('argon_code_theme');
 		argon_update_option('argon_comment_enable_qq_avatar');
 		argon_update_option('argon_enable_login_css');
+		argon_update_option('argon_hide_categories');
+		argon_update_option('argon_show_author');
 
 		//LazyLoad 相关
 		argon_update_option('argon_enable_lazyload');

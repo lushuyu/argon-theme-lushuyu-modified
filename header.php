@@ -7,6 +7,9 @@
 	if (get_option('argon_page_layout') == "single"){
 		$htmlclasses .= "single-column ";
 	}
+	if (get_option('argon_page_layout') == "triple"){
+		$htmlclasses .= "triple-column ";
+	}
 	if (get_option('argon_enable_amoled_dark') == "true"){
 		$htmlclasses .= "amoled-dark ";
 	}
@@ -58,8 +61,10 @@
 			<meta property="og:description" content="<?php echo $seo_description?>">
 	<?php } ?>
 
-	<?php if (get_option('argon_seo_keywords') != ''){ ?>
-		<meta name="keywords" content="<?php echo get_option('argon_seo_keywords');?>">
+	<?php
+		$seo_keywords = get_seo_keywords();
+		if ($seo_keywords != ''){ ?>
+			<meta name="keywords" content="<?php echo get_seo_keywords();?>">
 	<?php } ?>
 
 	<meta name="theme-color" content="<?php echo $themecolor; ?>">
@@ -355,11 +360,11 @@
 			?>
 			<div id="banner_container" class="banner-container container text-margin">
 				<?php if ($enable_banner_title_typing_effect != "true"){?>
-					<h1 class="banner-title"><span class="banner-title-inner color-background"><?php echo $banner_title; ?></span>
+					<div class="banner-title"><span class="banner-title-inner color-background"><?php echo $banner_title; ?></span>
 				<?php } else {?>
-					<h1 class="banner-title" data-text="<?php echo $banner_title; ?>" data-interval="<?php echo (get_option('argon_banner_typing_effect_interval') == '' ? '100' : get_option('argon_banner_typing_effect_interval')); ?>"><span class="banner-title-inner color-background">&nbsp;</span>
+					<div class="banner-title" data-text="<?php echo $banner_title; ?>" data-interval="<?php echo (get_option('argon_banner_typing_effect_interval') == '' ? '100' : get_option('argon_banner_typing_effect_interval')); ?>"><span class="banner-title-inner color-background">&nbsp;</span>
 				<?php }?>
-				<?php echo get_option('argon_banner_subtitle') == '' ? '' : '<span class="banner-subtitle d-block color-background">' . get_option('argon_banner_subtitle') . '</span>'; ?></h1>
+				<?php echo get_option('argon_banner_subtitle') == '' ? '' : '<span class="banner-subtitle d-block color-background">' . get_option('argon_banner_subtitle') . '</span>'; ?></div>
 			</div>
 			<?php if (get_option('argon_banner_background_url') != '') { ?>
 				<style>
