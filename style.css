@@ -3635,6 +3635,9 @@ html.darkmode.amoled-dark #content:before , html.darkmode.amoled-dark #content:a
 	html.darkmode #leftbar_announcement~ #leftbar_part1 .leftbar-banner {
 		background: #353535 !important;
 	}
+	#banner_part{
+		width: 100%;
+	}
 	#primary{
 		width: 100%;
 	}
