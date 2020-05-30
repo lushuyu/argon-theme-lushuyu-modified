@@ -247,7 +247,7 @@ a.text-primary:focus , a.text-primary:hover {
 	padding: 0 5px;
 	max-width: 1200px;
 	margin: auto;
-	margin-top: -30vh;
+	margin-top: -230px;
 }
 @media screen and (min-width:1700px){
 	#content{
@@ -3689,6 +3689,9 @@ html.darkmode.amoled-dark #content:before , html.darkmode.amoled-dark #content:a
 		width: 100%;
 	}
 	#primary{
+		width: 100%;
+	}
+	#banner{
 		width: 100%;
 	}
 	#main{
